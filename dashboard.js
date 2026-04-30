@@ -12,6 +12,7 @@
     let statusFilter = "all";
     let typeFilter   = "all";
     let currentScore = 0;
+    let focusedIncidentId = null; // Tracked focus for map view
 
     const $ = s => document.querySelector(s);
     const $$ = s => document.querySelectorAll(s);
@@ -140,8 +141,13 @@
 
     function renderGauge() {
         if(!dom.gaugeArc) return;
-        const score = incidents.filter(i => i.status === "active").length
+        const baseScore = incidents.filter(i => i.status === "active").length
             ? Math.max(...incidents.filter(i => i.status === "active").map(i => i.threat_score || 0)) : 0;
+        
+        // Add subtle "Live Pulse" jitter (±0.5) to indicate active monitoring
+        const jitter = (Math.random() - 0.5) * 1.2;
+        const score = Math.max(0, Math.min(100, Math.round(baseScore + jitter)));
+        
         currentScore = score;
         const arc = 283;
         dom.gaugeArc.style.strokeDashoffset = arc - (arc * score / 100);
@@ -274,15 +280,25 @@
         }
         dom.mapPlaceholder.style.display = "none";
         dom.mapIframe.style.display      = "block";
-        const c = geo[0];
-        dom.mapIframe.src = `https://maps.google.com/maps?q=${c.latitude},${c.longitude}&z=13&output=embed`;
+        
+        // Use focused incident if it exists, otherwise latest
+        let c = geo.find(i => i.incident_id === focusedIncidentId) || geo[0];
+        
+        const newSrc = `https://maps.google.com/maps?q=${c.latitude},${c.longitude}&z=16&output=embed`;
+        // Only update src if it changed to avoid flickering
+        if (dom.mapIframe.getAttribute('data-src') !== newSrc) {
+            dom.mapIframe.src = newSrc;
+            dom.mapIframe.setAttribute('data-src', newSrc);
+        }
+
         if(dom.mapList) {
             dom.mapList.innerHTML = geo.map(inc => {
                 let sClass = "text-on-surface";
                 if(inc.threat_score >= 80) sClass = "text-error font-bold";
                 else if(inc.threat_score >= 60) sClass = "text-[#856404] font-bold";
+                const isFocused = inc.incident_id === (focusedIncidentId || geo[0].incident_id);
                 return `
-                <div class="flex items-center justify-between p-3 border-b border-surface-variant last:border-0 cursor-pointer hover:bg-surface-container-low transition-colors interactive-card" onclick="window._openIncident('${inc.incident_id}')">
+                <div class="flex items-center justify-between p-3 border-b border-surface-variant last:border-0 cursor-pointer ${isFocused ? 'bg-primary-fixed/20 border-l-4 border-l-primary' : 'hover:bg-surface-container-low'} transition-colors interactive-card" onclick="window._focusIncident('${inc.incident_id}')">
                     <div class="flex items-center gap-3">
                         <div class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center text-lg shrink-0">${typeIcon(inc.threat_type)}</div>
                         <div>
@@ -295,6 +311,12 @@
             }).join("");
         }
     }
+
+    window._focusIncident = function(id) {
+        focusedIncidentId = id;
+        renderMap();
+        toast("Map focused on threat location", "info");
+    };
 
     // ════════════════════════════════════════════════════════
     //  FACE MANAGEMENT
@@ -491,6 +513,13 @@
     window._openIncident = function(id) {
         const inc = incidents.find(i => i.incident_id === id);
         if (!inc) return;
+        
+        // Auto-focus map when opening detail
+        if (inc.latitude && inc.longitude) {
+            focusedIncidentId = id;
+            renderMap();
+        }
+
         dom.modalTitle.textContent = `${fmtType(inc.threat_type)} Incident`;
         
         let statusBadge = `<span class="px-2 py-1 rounded-full text-body-sm font-label-md bg-surface-variant text-on-surface-variant">${inc.status}</span>`;
@@ -668,6 +697,9 @@
 
         // Initial connection attempt if URL is present
         if(dom.backendUrl.value) connect();
+        
+        // Start Live Pulse for the gauge (independent of polling)
+        setInterval(renderGauge, 1500);
         
         switchView("dashboard");
     }

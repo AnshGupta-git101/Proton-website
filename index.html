@@ -122,13 +122,278 @@ button:active, .nav-item:active, [onclick]:active {
     animation: popUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
 }
 
-/* Map Full View Styling */
-.map-container-full { background-image: url(https://lh3.googleusercontent.com/aida-public/AB6AXuBFUe6p95athcFukTxeQMsnUIpNF67cXJsVr9XaOXyfugZZ1WuRFVSa-olgW2pDN4ISY7YTblZcfv1Ic1aScqusnSIwFbQv1HwcN3I1BmGotKTE8Jxl-padOF1sQFVxRSXuoFEfyhZsbHHyRtTkOsZprWScFsGBQ7cH2Aa9kEXDbUSXBBd1NbLjkL6ZCN1HxqIaZaZkWowUKwbRYnI86rW-yHoSdGp4cLRbEzjqgAl5F525g_R-TCBbemJuXXEpDFfU-w2nYtPXjXs); background-size: cover; background-position: center; }
+/* Custom Toast Animation */
+@keyframes toastIn {
+    from { transform: translateY(-20px) scale(0.9); opacity: 0; }
+    to { transform: translateY(0) scale(1); opacity: 1; }
+}
+@keyframes toastOut {
+    from { transform: translateY(0) scale(1); opacity: 1; }
+    to { transform: translateY(-20px) scale(0.9); opacity: 0; }
+}
+.toast-active { animation: toastIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+.toast-inactive { animation: toastOut 0.3s forwards; }
 </style>
 </head>
 <body class="bg-background text-on-background font-body-md text-body-md antialiased flex h-screen overflow-hidden">
 
 <canvas id="webgl-bg"></canvas>
+
+<!-- Custom Toast Alert -->
+<div id="custom-toast" class="fixed top-8 left-1/2 -translate-x-1/2 z-[200] hidden">
+    <div class="bg-[#1b1b1f]/80 backdrop-blur-xl border border-white/10 px-6 py-3 rounded-2xl flex items-center gap-3 shadow-2xl">
+        <span id="toast-icon" class="material-symbols-outlined text-primary">info</span>
+        <p id="toast-msg" class="text-sm font-medium text-white"></p>
+    </div>
+</div>
+
+<!-- Login/Register Overlay -->
+<div id="login-overlay" class="fixed inset-0 z-[100] bg-black/40 backdrop-blur-md flex items-center justify-center transition-opacity duration-500 opacity-100">
+    <div class="bg-[#1b1b1f]/60 backdrop-blur-2xl ambient-shadow border border-white/10 p-10 rounded-[2rem] w-[420px] flex flex-col items-center relative overflow-hidden interactive-card">
+        <!-- Glows -->
+        <div class="absolute -top-24 -right-24 w-48 h-48 bg-primary/20 rounded-full blur-[80px]"></div>
+        <div class="absolute -bottom-24 -left-24 w-48 h-48 bg-secondary-container/30 rounded-full blur-[80px]"></div>
+        
+        <div class="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mb-6 border border-white/5 relative z-10">
+            <span class="material-symbols-outlined text-4xl text-primary">security</span>
+        </div>
+        <h1 class="text-3xl font-h1 tracking-tight text-white mb-1 relative z-10">Log in</h1>
+        <p class="text-sm text-outline mb-8 text-center relative z-10" id="login-subtitle">Log in to your P.R.O.T.O.N. account and continue monitoring your secure perimeter.</p>
+        
+        <!-- Login Form -->
+        <form id="login-form" class="w-full relative z-10 flex flex-col gap-5">
+            <div>
+                <div class="bg-black/20 border border-white/5 rounded-xl flex items-center h-12 focus-within:border-primary/50 transition-colors">
+                    <span class="material-symbols-outlined text-[20px] text-outline ml-4">alternate_email</span>
+                    <input type="text" id="login-id" class="w-full h-full px-3 text-sm bg-transparent text-white outline-none placeholder:text-outline/50" placeholder="Email or Username" autocomplete="username">
+                </div>
+            </div>
+            <div>
+                <div class="bg-black/20 border border-white/5 rounded-xl flex items-center h-12 focus-within:border-primary/50 transition-colors relative">
+                    <span class="material-symbols-outlined text-[20px] text-outline ml-4">lock</span>
+                    <input type="password" id="login-password" class="w-full h-full pl-3 pr-10 text-sm bg-transparent text-white outline-none placeholder:text-outline/50" placeholder="Password" autocomplete="current-password">
+                    <button type="button" onclick="window._togglePass('login-password', this)" class="absolute right-3 text-outline hover:text-primary transition-colors">
+                        <span class="material-symbols-outlined text-[20px]">visibility</span>
+                    </button>
+                </div>
+                <p id="login-error" class="text-[11px] text-error mt-2 hidden text-center"></p>
+            </div>
+            <button type="submit" class="w-full h-12 bg-primary text-white rounded-xl font-semibold hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 flex items-center justify-center gap-2">
+                <span>Log in</span>
+            </button>
+            <p class="text-center text-xs text-outline mt-2">Didn't have an account? <a href="#" onclick="window._toggleRegister(true)" class="text-primary font-bold hover:underline">Sign up</a></p>
+        </form>
+
+        <!-- Register Form -->
+        <!-- Register Form -->
+        <form id="register-form" class="w-full relative z-10 flex flex-col gap-4 hidden">
+            <div class="bg-black/20 border border-white/5 rounded-xl flex items-center h-12 focus-within:border-primary/50 transition-colors">
+                <span class="material-symbols-outlined text-[20px] text-outline ml-4">alternate_email</span>
+                <input type="text" id="reg-id" class="w-full h-full px-3 text-sm bg-transparent text-white outline-none placeholder:text-outline/50" placeholder="Email or Username">
+            </div>
+            <div class="bg-black/20 border border-white/5 rounded-xl flex items-center h-12 focus-within:border-primary/50 transition-colors">
+                <span class="material-symbols-outlined text-[20px] text-outline ml-4">person</span>
+                <input type="text" id="reg-name" class="w-full h-full px-3 text-sm bg-transparent text-white outline-none placeholder:text-outline/50" placeholder="Full Name">
+            </div>
+            <div class="bg-black/20 border border-white/5 rounded-xl flex items-center h-12 focus-within:border-primary/50 transition-colors">
+                <span class="material-symbols-outlined text-[20px] text-outline ml-4">badge</span>
+                <input type="text" id="reg-role" class="w-full h-full px-3 text-sm bg-transparent text-white outline-none placeholder:text-outline/50" placeholder="Role (e.g. Lead Analyst)">
+            </div>
+            <button type="button" onclick="document.getElementById('reg-photo-file').click()" class="w-full h-12 bg-white/5 rounded-xl border border-white/10 text-outline text-sm hover:bg-white/10 transition-colors flex items-center justify-center gap-2">
+                <span class="material-symbols-outlined text-[20px]">upload</span>
+                <span id="photo-btn-text">Upload Photo</span>
+            </button>
+            <input type="file" id="reg-photo-file" class="hidden" accept="image/*">
+            
+            <div class="bg-black/20 border border-white/5 rounded-xl flex items-center h-12 focus-within:border-primary/50 transition-colors relative">
+                <span class="material-symbols-outlined text-[20px] text-outline ml-4">lock</span>
+                <input type="password" id="reg-pass" class="w-full h-full pl-3 pr-10 text-sm bg-transparent text-white outline-none placeholder:text-outline/50" placeholder="Create Password">
+                <button type="button" onclick="window._togglePass('reg-pass', this)" class="absolute right-3 text-outline hover:text-primary transition-colors">
+                    <span class="material-symbols-outlined text-[20px]">visibility</span>
+                </button>
+            </div>
+            <p id="reg-error" class="text-[11px] text-error hidden text-center"></p>
+
+            <button type="submit" class="w-full h-12 bg-secondary-container text-on-secondary-container rounded-xl font-bold hover:brightness-110 transition-all mt-2 shadow-lg flex items-center justify-center gap-2">
+                <span>Sign up</span>
+            </button>
+            <p class="text-center text-xs text-outline mt-2">Already registered? <a href="#" onclick="window._toggleRegister(false)" class="text-primary font-bold hover:underline">Log in</a></p>
+        </form>
+        
+        <div class="mt-8 text-[10px] text-outline uppercase tracking-widest relative z-10">
+            System encrypted & secured
+        </div>
+    </div>
+</div>
+
+<script>
+    window.showToast = function(msg, isError = false) {
+        const toast = document.getElementById('custom-toast');
+        const toastMsg = document.getElementById('toast-msg');
+        const toastIcon = document.getElementById('toast-icon');
+        
+        toastMsg.innerText = msg;
+        toastIcon.innerText = isError ? 'error' : 'check_circle';
+        toastIcon.className = `material-symbols-outlined ${isError ? 'text-error' : 'text-primary'}`;
+        
+        toast.classList.remove('hidden', 'toast-inactive');
+        toast.classList.add('toast-active');
+        
+        setTimeout(() => {
+            toast.classList.remove('toast-active');
+            toast.classList.add('toast-inactive');
+            setTimeout(() => toast.classList.add('hidden'), 300);
+        }, 3000);
+    };
+
+    window._toggleRegister = function(show) {
+        document.getElementById('login-form').classList.toggle('hidden', show);
+        document.getElementById('register-form').classList.toggle('hidden', !show);
+        document.getElementById('login-subtitle').innerText = show ? 'Create your account and seamlessly continue managing your projects.' : 'Log in to your P.R.O.T.O.N. account and continue monitoring your secure perimeter.';
+        document.querySelector('#login-overlay h1').innerText = show ? 'Sign up' : 'Log in';
+        
+        // Reset errors
+        document.getElementById('login-error').classList.add('hidden');
+        document.getElementById('reg-error').classList.add('hidden');
+    };
+
+    function validateEmail(email) {
+        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    }
+
+    function validatePassword(pass) {
+        // Min 6 chars, 1 number, 1 special char
+        return pass.length >= 6 && /[0-9]/.test(pass) && /[!@#$%^&*(),.?":{}|<>]/.test(pass);
+    }
+
+    function applyUser(name, role, photo, pass, id) {
+        if (name) document.getElementById('user-display-name').innerText = name;
+        if (role) document.getElementById('user-display-role').innerText = role;
+        if (photo) document.getElementById('user-display-photo').src = photo;
+        
+        localStorage.setItem('proton_user', JSON.stringify(updated));
+        // New: Track session to prevent auto-logout on refresh
+        localStorage.setItem('proton_logged_in', 'true');
+    }
+
+    function checkSession() {
+        const loggedIn = localStorage.getItem('proton_logged_in') === 'true';
+        const saved = localStorage.getItem('proton_user');
+        if (loggedIn && saved) {
+            const u = JSON.parse(saved);
+            applyUser(u.name, u.role, u.photo);
+            const overlay = document.getElementById('login-overlay');
+            overlay.style.display = 'none';
+            overlay.classList.add('opacity-0');
+        }
+    }
+
+    document.getElementById('login-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const inputId = document.getElementById('login-id').value;
+        const inputPass = document.getElementById('login-password').value;
+        const err = document.getElementById('login-error');
+        
+        const saved = JSON.parse(localStorage.getItem('proton_user') || '{}');
+        const validId = saved.id || 'admin';
+        const validPass = saved.pass || 'proton';
+
+        err.classList.add('hidden');
+
+        if (!inputId) {
+            err.innerText = "Please enter your email or username.";
+            err.classList.remove('hidden');
+            return;
+        }
+
+        if (inputId.toLowerCase() !== validId.toLowerCase()) {
+            err.innerText = "Incorrect identifier. User not found.";
+            err.classList.remove('hidden');
+            return;
+        }
+
+        if (inputPass.toLowerCase() !== validPass.toLowerCase()) {
+            err.innerText = "Wrong password. Please try again.";
+            err.classList.remove('hidden');
+            return;
+        }
+
+        const overlay = document.getElementById('login-overlay');
+        overlay.classList.add('opacity-0');
+        localStorage.setItem('proton_logged_in', 'true'); // Save session
+        setTimeout(() => { overlay.style.display = 'none'; }, 500);
+    });
+
+    window._togglePass = function(id, btn) {
+        const input = document.getElementById(id);
+        const icon = btn.querySelector('.material-symbols-outlined');
+        if (input.type === 'password') {
+            input.type = 'text';
+            icon.innerText = 'visibility_off';
+        } else {
+            input.type = 'password';
+            icon.innerText = 'visibility';
+        }
+    };
+
+    let uploadedPhotoBase64 = null;
+
+    document.getElementById('reg-photo-file').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                uploadedPhotoBase64 = event.target.result;
+                document.getElementById('photo-btn-text').innerText = 'Change Photo';
+                showToast('Photo uploaded successfully!');
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+
+    document.getElementById('register-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const id = document.getElementById('reg-id').value;
+        const name = document.getElementById('reg-name').value;
+        const role = document.getElementById('reg-role').value;
+        const pass = document.getElementById('reg-pass').value;
+        const err = document.getElementById('reg-error');
+        
+        err.classList.add('hidden');
+
+        if (!id || !name || !role) {
+            showToast('Please fill in all identity fields.', true);
+            return;
+        }
+
+        if (id.includes('@') && !validateEmail(id)) {
+            showToast('Invalid email format.', true);
+            return;
+        }
+
+        if (!validatePassword(pass)) {
+            showToast('Password must be 6+ chars with 1 number and 1 special character.', true);
+            return;
+        }
+
+        if (!uploadedPhotoBase64) {
+            showToast('Please upload a profile photo.', true);
+            return;
+        }
+
+        applyUser(name, role, uploadedPhotoBase64, pass, id);
+        showToast('Account created! Please sign in.');
+        window._toggleRegister(false);
+    });
+
+    window._logout = function() {
+        localStorage.removeItem('proton_logged_in');
+        location.reload();
+    };
+
+    // Session check on load
+    checkSession();
+</script>
 
 <!-- SideNavBar -->
 <nav class="h-screen w-64 fixed left-0 top-0 border-r border-surface-container bg-surface-container-lowest/90 backdrop-blur-md flex flex-col pt-20 pb-8 px-4 z-50 shadow-sm" id="sidebar">
@@ -161,11 +426,14 @@ button:active, .nav-item:active, [onclick]:active {
             <span class="text-outline status-text">Connecting...</span>
         </div>
         <div class="flex items-center gap-3 text-on-surface-variant hover:text-on-surface transition-colors pt-4 border-t border-surface-variant">
-            <img alt="Analyst Profile" class="w-8 h-8 rounded-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC0xuJ3Z6S_O7JiPF-wjwPuUSlNQMTXA0tUubW5lwh1LwqUO9VkOj3K5DoPYqADInSanthrip_reZhUpmqNDV3XLjUkgWG4yLsF0Qs6mjJ62LBksiTg6XcepahixgqcFL7zTnpG2IZMpuYADYvQ_56KXad5THq2Xr0g8hpNpowQ2E4yms-O4IjpL00Yht_ayb9qMuADG2KAiePiNPa1Bj9X9G9BQMdDVQxlHh8DUtKLV_q0-M2Z-G2DI0w7s-_O_tN137TSfTjiNIo"/>
-            <div>
-                <p class="font-semibold text-xs text-on-surface">J. Smith</p>
-                <p class="text-[10px]">Lead Analyst</p>
+            <img alt="Analyst Profile" class="w-8 h-8 rounded-full object-cover" id="user-display-photo" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC0xuJ3Z6S_O7JiPF-wjwPuUSlNQMTXA0tUubW5lwh1LwqUO9VkOj3K5DoPYqADInSanthrip_reZhUpmqNDV3XLjUkgWG4yLsF0Qs6mjJ62LBksiTg6XcepahixgqcFL7zTnpG2IZMpuYADYvQ_56KXad5THq2Xr0g8hpNpowQ2E4yms-O4IjpL00Yht_ayb9qMuADG2KAiePiNPa1Bj9X9G9BQMdDVQxlHh8DUtKLV_q0-M2Z-G2DI0w7s-_O_tN137TSfTjiNIo"/>
+            <div class="overflow-hidden">
+                <p class="font-semibold text-xs text-on-surface truncate" id="user-display-name">J. Smith</p>
+                <p class="text-[10px] truncate" id="user-display-role">Lead Analyst</p>
             </div>
+            <button class="ml-auto w-8 h-8 rounded-full flex items-center justify-center text-on-surface-variant hover:text-error hover:bg-error/10 transition-colors" title="Logout" onclick="window._logout()">
+                <span class="material-symbols-outlined text-[18px]">logout</span>
+            </button>
         </div>
     </div>
 </nav>

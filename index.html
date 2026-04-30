@@ -321,6 +321,12 @@ button:active, .nav-item:active, [onclick]:active {
         const overlay = document.getElementById('login-overlay');
         overlay.classList.add('opacity-0');
         localStorage.setItem('proton_logged_in', 'true'); // Save session
+        
+        // New: Apply user details immediately on login
+        if (saved.name) {
+            applyUser(saved.name, saved.role, saved.photo);
+        }
+        
         setTimeout(() => { overlay.style.display = 'none'; }, 500);
     });
 
@@ -428,8 +434,8 @@ button:active, .nav-item:active, [onclick]:active {
         <div class="flex items-center gap-3 text-on-surface-variant hover:text-on-surface transition-colors pt-4 border-t border-surface-variant">
             <img alt="Analyst Profile" class="w-8 h-8 rounded-full object-cover" id="user-display-photo" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC0xuJ3Z6S_O7JiPF-wjwPuUSlNQMTXA0tUubW5lwh1LwqUO9VkOj3K5DoPYqADInSanthrip_reZhUpmqNDV3XLjUkgWG4yLsF0Qs6mjJ62LBksiTg6XcepahixgqcFL7zTnpG2IZMpuYADYvQ_56KXad5THq2Xr0g8hpNpowQ2E4yms-O4IjpL00Yht_ayb9qMuADG2KAiePiNPa1Bj9X9G9BQMdDVQxlHh8DUtKLV_q0-M2Z-G2DI0w7s-_O_tN137TSfTjiNIo"/>
             <div class="overflow-hidden">
-                <p class="font-semibold text-xs text-on-surface truncate" id="user-display-name">J. Smith</p>
-                <p class="text-[10px] truncate" id="user-display-role">Lead Analyst</p>
+                <p class="font-semibold text-xs text-on-surface truncate" id="user-display-name">Guest Analyst</p>
+                <p class="text-[10px] truncate" id="user-display-role">Security Personnel</p>
             </div>
             <button class="ml-auto w-8 h-8 rounded-full flex items-center justify-center text-on-surface-variant hover:text-error hover:bg-error/10 transition-colors" title="Logout" onclick="window._logout()">
                 <span class="material-symbols-outlined text-[18px]">logout</span>

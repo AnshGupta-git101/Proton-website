@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>P.R.O.T.O.N. Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;900&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script id="tailwind-config">
+tailwind.config = {
+    darkMode: "class",
+    theme: {
+        extend: {
+            "colors": {
+                "secondary-container": "#6bff8f", "outline": "#797580", "on-error-container": "#93000a",
+                "surface-container-highest": "#e4e1e7", "tertiary": "#5a6242", "inverse-surface": "#303034",
+                "error-container": "#ffdad6", "surface-container-low": "#f6f2f8", "on-secondary-container": "#007432",
+                "primary-container": "#b1a6e8", "surface-tint": "#605692", "on-secondary-fixed-variant": "#005321",
+                "on-primary-fixed": "#1c104b", "on-surface-variant": "#48454f", "on-tertiary-container": "#3d4528",
+                "tertiary-fixed": "#dee7bf", "surface-variant": "#e4e1e7", "surface-container-lowest": "#ffffff",
+                "surface": "#fbf8fe", "background": "#fbf8fe", "secondary-fixed-dim": "#4ae176",
+                "inverse-on-surface": "#f3f0f5", "on-surface": "#1b1b1f", "on-primary-fixed-variant": "#483e79",
+                "primary": "#605692", "on-tertiary": "#ffffff", "outline-variant": "#c9c4d1",
+                "tertiary-container": "#a9b28d", "primary-fixed": "#e6deff", "secondary-fixed": "#6bff8f",
+                "surface-dim": "#dcd9de", "primary-fixed-dim": "#c9beff", "error": "#ba1a1a",
+                "on-tertiary-fixed": "#171e06", "surface-container": "#f0edf2", "on-tertiary-fixed-variant": "#424a2d",
+                "on-secondary": "#ffffff", "on-primary-container": "#433973", "surface-bright": "#fbf8fe",
+                "tertiary-fixed-dim": "#c2cba4", "inverse-primary": "#c9beff", "surface-container-high": "#eae7ed",
+                "secondary": "#006e2f", "on-error": "#ffffff", "on-background": "#1b1b1f", "on-primary": "#ffffff",
+                "on-secondary-fixed": "#002109"
+            },
+            "borderRadius": { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+            "spacing": { "xs": "4px", "gutter": "20px", "base": "8px", "xl": "48px", "sm": "12px", "lg": "32px", "md": "20px", "container-padding": "24px" },
+            "fontFamily": {
+                "body-sm": ["Poppins"], "display-stat": ["Poppins"], "h1": ["Poppins"], "h3": ["Poppins"],
+                "label-md": ["Poppins"], "h2": ["Poppins"], "body-md": ["Poppins"], "body-lg": ["Poppins"]
+            },
+            "fontSize": {
+                "body-sm": ["12px", { "lineHeight": "1.5", "fontWeight": "400" }],
+                "display-stat": ["40px", { "lineHeight": "1", "letterSpacing": "-0.03em", "fontWeight": "700" }],
+                "h1": ["32px", { "lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+                "h3": ["20px", { "lineHeight": "1.4", "fontWeight": "500" }],
+                "label-md": ["12px", { "lineHeight": "1", "fontWeight": "600" }],
+                "h2": ["24px", { "lineHeight": "1.3", "fontWeight": "600" }],
+                "body-md": ["14px", { "lineHeight": "1.5", "fontWeight": "400" }],
+                "body-lg": ["16px", { "lineHeight": "1.6", "fontWeight": "400" }]
+            }
+        }
+    }
+}
+</script>
+<style>
+body { background-color: #f8f9fa; }
+.ambient-shadow { box-shadow: 0 4px 20px rgba(0,0,0,0.04); }
+.material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24; }
+.icon-fill { font-variation-settings: 'FILL' 1, 'wght' 300, 'GRAD' 0, 'opsz' 24; }
+#webgl-bg { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; opacity: 0.8; }
+.view { display: none; }
+.view.active { display: flex; }
+.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 1000; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
+.modal-overlay.active { display: flex; }
+.modal { background: #ffffff; border-radius: 0.75rem; width: 520px; max-width: 95vw; max-height: 90vh; overflow-y: auto; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+.modal-header { display: flex; align-items: center; justify-content: space-between; padding: 18px 20px; border-bottom: 1px solid #e4e1e7; }
+.modal-body { padding: 20px; }
+.modal-footer { padding: 16px 20px; border-top: 1px solid #e4e1e7; display: flex; gap: 10px; justify-content: flex-end; }
+.modal-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f6f2f8; font-size: 0.85rem; }
+.modal-row:last-child { border-bottom: none; }
+.modal-evidence { width: 100%; border-radius: 8px; margin-top: 14px; }
+#toast-container { position: fixed; bottom: 20px; right: 20px; display: flex; flex-direction: column; gap: 8px; z-index: 2000; }
+.toast { display: flex; align-items: center; gap: 10px; padding: 12px 16px; border-radius: 8px; font-size: 14px; font-weight: 500; background: white; border: 1px solid #e4e1e7; box-shadow: 0 4px 12px rgba(0,0,0,0.08); animation: slideIn 0.2s ease; min-width: 260px; }
+.toast.success { border-left: 4px solid #006e2f; }
+.toast.error   { border-left: 4px solid #ba1a1a; }
+.toast.warning { border-left: 4px solid #eab308; }
+.toast.info    { border-left: 4px solid #605692; }
+@keyframes slideIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+.status-badge { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 600; text-transform: uppercase; }
+.status-active { background: #ffdad6; color: #93000a; }
+.status-acknowledged { background: #fef08a; color: #854d0e; }
+.status-resolved { background: #bbf7d0; color: #166534; }
+.score-safe { color: #006e2f; }
+.score-moderate { color: #854d0e; }
+.score-high { color: #b45309; }
+.score-critical { color: #ba1a1a; }
+.map-container-inner { position: relative; height: 400px; width: 100%; border-radius: 12px; overflow: hidden; background: #f0edf2; }
+.map-placeholder { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #797580; }
+.map-iframe { width: 100%; height: 100%; border: none; }
+.recent-item { display: flex; align-items: start; gap: 12px; padding-bottom: 16px; border-bottom: 1px solid #f6f2f8; margin-bottom: 16px; cursor: pointer; transition: background 0.2s; }
+.recent-item:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+.recent-item:hover { background: #f6f2f8; }
+.recent-icon { flex-shrink: 0; font-size: 16px; margin-top: 2px; }
+.recent-info { flex: 1; }
+.recent-title { font-size: 14px; font-weight: 500; color: #1b1b1f; display: flex; gap: 8px; align-items: center; }
+.recent-meta { font-size: 11px; color: #48454f; display: flex; gap: 8px; margin-top: 2px; }
+.recent-score { font-size: 14px; font-weight: 600; }
+/* Pop animations */
+.interactive-card {
+    transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.2s ease, background-color 0.2s ease;
+}
+.interactive-card:hover {
+    transform: translateY(-4px) scale(1.01);
+    box-shadow: 0 12px 30px rgba(0,0,0,0.08);
+}
+.interactive-card:active {
+    transform: scale(0.98);
+}
+
+button, .nav-item, [onclick] {
+    transition: transform 0.1s ease, filter 0.1s ease;
+}
+button:active, .nav-item:active, [onclick]:active {
+    transform: scale(0.96);
+}
+
+/* Page load pop */
+@keyframes popUp {
+    0% { transform: scale(0.95) translateY(10px); opacity: 0; }
+    100% { transform: scale(1) translateY(0); opacity: 1; }
+}
+.view.active > div, .view.active > section {
+    animation: popUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+/* Map Full View Styling */
+.map-container-full { background-image: url(https://lh3.googleusercontent.com/aida-public/AB6AXuBFUe6p95athcFukTxeQMsnUIpNF67cXJsVr9XaOXyfugZZ1WuRFVSa-olgW2pDN4ISY7YTblZcfv1Ic1aScqusnSIwFbQv1HwcN3I1BmGotKTE8Jxl-padOF1sQFVxRSXuoFEfyhZsbHHyRtTkOsZprWScFsGBQ7cH2Aa9kEXDbUSXBBd1NbLjkL6ZCN1HxqIaZaZkWowUKwbRYnI86rW-yHoSdGp4cLRbEzjqgAl5F525g_R-TCBbemJuXXEpDFfU-w2nYtPXjXs); background-size: cover; background-position: center; }
+</style>
+</head>
+<body class="bg-background text-on-background font-body-md text-body-md antialiased flex h-screen overflow-hidden">
+
+<canvas id="webgl-bg"></canvas>
+
+<!-- SideNavBar -->
+<nav class="h-screen w-64 fixed left-0 top-0 border-r border-surface-container bg-surface-container-lowest/90 backdrop-blur-md flex flex-col pt-20 pb-8 px-4 z-50 shadow-sm" id="sidebar">
+    <div class="mb-10 px-4">
+        <h1 class="text-lg font-black text-on-surface font-h3 tracking-tighter">P.R.O.T.O.N.</h1>
+        <p class="text-outline text-xs mt-1">Security Operations</p>
+    </div>
+    <div class="flex-1 space-y-2">
+        <a class="nav-item active flex items-center gap-3 px-4 py-3 rounded-lg bg-primary-fixed/30 text-primary border-r-4 border-primary hover:bg-surface-container transition-all cursor-pointer" data-view="dashboard">
+            <span class="material-symbols-outlined icon-fill">grid_view</span>
+            <span class="font-label-md">Dashboard</span>
+        </a>
+        <a class="nav-item flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-all cursor-pointer" data-view="incidents">
+            <span class="material-symbols-outlined">emergency_home</span>
+            <span class="font-label-md">Incidents</span>
+            <span class="ml-auto bg-error text-on-error px-2 py-0.5 rounded-full text-[10px] font-bold" id="incident-count-badge" style="display:none">0</span>
+        </a>
+        <a class="nav-item flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-all cursor-pointer" data-view="faces">
+            <span class="material-symbols-outlined">face</span>
+            <span class="font-label-md">Authorized Faces</span>
+        </a>
+        <a class="nav-item flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-all cursor-pointer" data-view="map">
+            <span class="material-symbols-outlined">public</span>
+            <span class="font-label-md">Live Map</span>
+        </a>
+    </div>
+    <div class="mt-auto px-4 space-y-4">
+        <div class="flex items-center gap-2 text-xs" id="connection-status">
+            <span class="w-2 h-2 rounded-full bg-outline status-dot"></span>
+            <span class="text-outline status-text">Connecting...</span>
+        </div>
+        <div class="flex items-center gap-3 text-on-surface-variant hover:text-on-surface transition-colors pt-4 border-t border-surface-variant">
+            <img alt="Analyst Profile" class="w-8 h-8 rounded-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC0xuJ3Z6S_O7JiPF-wjwPuUSlNQMTXA0tUubW5lwh1LwqUO9VkOj3K5DoPYqADInSanthrip_reZhUpmqNDV3XLjUkgWG4yLsF0Qs6mjJ62LBksiTg6XcepahixgqcFL7zTnpG2IZMpuYADYvQ_56KXad5THq2Xr0g8hpNpowQ2E4yms-O4IjpL00Yht_ayb9qMuADG2KAiePiNPa1Bj9X9G9BQMdDVQxlHh8DUtKLV_q0-M2Z-G2DI0w7s-_O_tN137TSfTjiNIo"/>
+            <div>
+                <p class="font-semibold text-xs text-on-surface">J. Smith</p>
+                <p class="text-[10px]">Lead Analyst</p>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<!-- Main Content Wrapper -->
+<div class="flex-1 ml-64 flex flex-col h-screen overflow-hidden relative z-10">
+    <!-- TopNavBar -->
+    <header class="flex justify-between items-center h-16 px-8 w-full bg-surface-container-lowest/80 backdrop-blur-md border-b border-surface-variant shadow-sm z-40 sticky top-0">
+        <div class="flex items-center gap-4">
+            <button class="md:hidden w-10 h-10 rounded-full flex items-center justify-center text-on-surface-variant hover:bg-surface-container" id="menu-toggle">
+                <span class="material-symbols-outlined">menu</span>
+            </button>
+            <h1 class="font-h2 text-h2 text-on-surface" id="page-title">Dashboard</h1>
+        </div>
+        <div class="flex-1 max-w-md mx-4">
+            <div class="relative flex items-center w-full h-10 rounded-full bg-surface-container-low focus-within:ring-1 focus-within:ring-primary-container overflow-hidden hidden md:flex">
+                <div class="grid place-items-center h-full w-12 text-outline">
+                    <span class="material-symbols-outlined text-[20px]">search</span>
+                </div>
+                <input class="peer h-full w-full outline-none text-sm text-on-surface bg-transparent pr-2" id="search" placeholder="Search entities, alerts, IP..." type="text"/>
+            </div>
+        </div>
+        <div class="flex items-center gap-4">
+            <div class="flex items-center gap-2 border-r border-surface-variant pr-4">
+                <input class="h-9 px-3 text-sm rounded-md border border-outline-variant bg-surface-container-lowest text-on-surface focus:outline-none focus:border-primary w-40" id="backend-url" placeholder="Backend URL" type="text" value="http://localhost:5001"/>
+                <button class="h-9 px-4 rounded-md bg-primary text-on-primary text-sm font-medium hover:bg-primary/90 transition-colors" id="connect-btn">Connect</button>
+            </div>
+            <span class="text-xs text-outline hidden lg:block" id="last-refresh">—</span>
+            <button class="w-10 h-10 rounded-full flex items-center justify-center text-on-surface-variant hover:bg-surface-container transition-colors duration-200" id="refresh-btn">
+                <span class="material-symbols-outlined text-[20px]">refresh</span>
+            </button>
+            <button class="w-10 h-10 rounded-full flex items-center justify-center text-on-surface-variant hover:bg-surface-container transition-colors duration-200">
+                <span class="material-symbols-outlined text-[20px]">notifications</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Views Area -->
+    <main class="flex-1 overflow-y-auto relative z-10" id="main-content">
+        
+        <!-- VIEW: DASHBOARD -->
+        <section class="view active flex gap-lg max-w-[1400px] mx-auto h-full p-lg" id="view-dashboard">
+            <!-- Left Data Canvas -->
+            <div class="flex-1 flex flex-col gap-lg">
+                <div class="flex justify-between items-end mb-md">
+                    <div>
+                        <h2 class="font-h1 text-h1 text-on-surface">Overview</h2>
+                        <p class="text-outline mt-1 text-sm">System status for the last 24 hours.</p>
+                    </div>
+                </div>
+                
+                <!-- Stats Row -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                    <div class="bg-surface-container-lowest rounded-xl p-4 ambient-shadow flex items-center gap-4 border border-surface-variant/50 interactive-card">
+                        <div class="w-10 h-10 rounded-lg bg-surface-container flex items-center justify-center text-primary"><span class="material-symbols-outlined">list_alt</span></div>
+                        <div><div class="text-2xl font-bold text-on-surface" id="stat-total-value">0</div><div class="text-xs text-outline">Total Incidents</div></div>
+                    </div>
+                    <div class="bg-surface-container-lowest rounded-xl p-4 ambient-shadow flex items-center gap-4 border border-surface-variant/50 interactive-card">
+                        <div class="w-10 h-10 rounded-lg bg-error-container flex items-center justify-center text-error"><span class="material-symbols-outlined">warning</span></div>
+                        <div><div class="text-2xl font-bold text-on-surface" id="stat-active-value">0</div><div class="text-xs text-outline">Active Alerts</div></div>
+                    </div>
+                    <div class="bg-surface-container-lowest rounded-xl p-4 ambient-shadow flex items-center gap-4 border border-surface-variant/50 interactive-card">
+                        <div class="w-10 h-10 rounded-lg bg-secondary-container/50 flex items-center justify-center text-secondary"><span class="material-symbols-outlined">check_circle</span></div>
+                        <div><div class="text-2xl font-bold text-on-surface" id="stat-resolved-value">0</div><div class="text-xs text-outline">Resolved</div></div>
+                    </div>
+                    <div class="bg-surface-container-lowest rounded-xl p-4 ambient-shadow flex items-center gap-4 border border-surface-variant/50 interactive-card">
+                        <div class="w-10 h-10 rounded-lg bg-primary-fixed flex items-center justify-center text-primary-fixed-variant"><span class="material-symbols-outlined">trending_up</span></div>
+                        <div><div class="text-2xl font-bold text-on-surface" id="stat-high-score-value">0</div><div class="text-xs text-outline">Peak Score</div></div>
+                    </div>
+                </div>
+
+                <!-- Top Row Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-gutter">
+                    <!-- Threat Score -->
+                    <div class="bg-surface-container-lowest rounded-xl p-container-padding ambient-shadow flex flex-col items-center justify-center relative overflow-hidden interactive-card">
+                        <div class="w-full flex justify-between items-start mb-4 absolute top-6 left-6 right-6">
+                            <h3 class="font-h3 text-h3 text-on-surface">Threat Score</h3>
+                            <button><span class="material-symbols-outlined text-outline">more_horiz</span></button>
+                        </div>
+                        <div class="relative w-40 h-40 mt-10">
+                            <svg class="w-full h-full transform -rotate-90" viewbox="0 0 100 100">
+                                <circle cx="50" cy="50" fill="none" r="45" stroke="#eae7ed" stroke-width="8"></circle>
+                                <circle class="transition-all duration-1000" cx="50" cy="50" fill="none" id="gauge-arc" r="45" stroke="#605692" stroke-dasharray="283" stroke-dashoffset="283" stroke-width="8"></circle>
+                            </svg>
+                            <div class="absolute inset-0 flex flex-col items-center justify-center">
+                                <span class="font-display-stat text-display-stat text-primary" id="gauge-score-text">0</span>
+                                <span class="text-xs text-outline mt-1 font-semibold px-2 py-1 rounded bg-surface-container" id="threat-label">SAFE</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Activity Timeline -->
+                    <div class="bg-surface-container-lowest rounded-xl p-container-padding ambient-shadow md:col-span-2 flex flex-col h-[300px] interactive-card">
+                        <div class="flex justify-between items-center mb-6 shrink-0">
+                            <h3 class="font-h3 text-h3 text-on-surface">Activity Timeline</h3>
+                        </div>
+                        <div class="flex-1 overflow-y-auto space-y-4 pr-2" id="timeline">
+                            <div class="text-center py-8 text-outline"><p>No activity recorded</p></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Contextual Drawer -->
+            <aside class="w-80 bg-primary-fixed/20 rounded-xl p-container-padding ambient-shadow flex flex-col shrink-0 overflow-hidden h-[calc(100vh-12rem)]">
+                <div class="flex items-center gap-3 mb-8">
+                    <div class="w-10 h-10 rounded-full bg-primary text-on-primary flex items-center justify-center">
+                        <span class="material-symbols-outlined">warning</span>
+                    </div>
+                    <div>
+                        <h3 class="font-h3 text-h3 text-on-surface">Active Threats</h3>
+                        <p class="text-xs text-outline">Recent critical items</p>
+                    </div>
+                </div>
+                <div class="flex-1 overflow-y-auto pr-2" id="recent-list">
+                    <div class="text-center py-8 text-outline text-sm"><p>No incidents yet</p></div>
+                </div>
+                <button class="mt-4 w-full py-3 bg-[#1a1a1e] text-white rounded-full font-medium text-sm hover:bg-black transition-colors" onclick="document.querySelector('[data-view=incidents]').click()">View All Incidents</button>
+            </aside>
+        </section>
+
+        <!-- VIEW: INCIDENTS -->
+        <section class="view flex-col gap-6 max-w-[1400px] mx-auto w-full p-lg" id="view-incidents">
+            <div>
+                <h2 class="font-h1 text-h1 text-on-surface">Incidents</h2>
+                <p class="font-body-lg text-body-lg text-on-surface-variant mt-xs">Monitor active threats.</p>
+            </div>
+            
+            <div class="flex gap-4 flex-wrap bg-surface-container-lowest p-4 rounded-xl ambient-shadow border border-surface-variant">
+                <div class="flex gap-2" id="status-filters">
+                    <button class="px-4 py-2 rounded-lg text-sm font-medium bg-primary-fixed/30 text-primary border border-primary/30 active" data-filter="all">All</button>
+                    <button class="px-4 py-2 rounded-lg text-sm font-medium bg-surface-container hover:bg-surface-variant text-on-surface-variant transition-colors" data-filter="active">Active</button>
+                    <button class="px-4 py-2 rounded-lg text-sm font-medium bg-surface-container hover:bg-surface-variant text-on-surface-variant transition-colors" data-filter="acknowledged">Acknowledged</button>
+                    <button class="px-4 py-2 rounded-lg text-sm font-medium bg-surface-container hover:bg-surface-variant text-on-surface-variant transition-colors" data-filter="resolved">Resolved</button>
+                </div>
+                <div class="w-px bg-surface-variant my-1"></div>
+                <div class="flex gap-2" id="type-filters">
+                    <button class="px-4 py-2 rounded-lg text-sm font-medium bg-primary-fixed/30 text-primary border border-primary/30 active" data-type="all">All Types</button>
+                    <button class="px-4 py-2 rounded-lg text-sm font-medium bg-surface-container hover:bg-surface-variant text-on-surface-variant transition-colors" data-type="fire">🔥 Fire</button>
+                    <button class="px-4 py-2 rounded-lg text-sm font-medium bg-surface-container hover:bg-surface-variant text-on-surface-variant transition-colors" data-type="glass_break">🪟 Glass Break</button>
+                    <button class="px-4 py-2 rounded-lg text-sm font-medium bg-surface-container hover:bg-surface-variant text-on-surface-variant transition-colors" data-type="intruder">🚨 Intruder</button>
+                </div>
+            </div>
+            
+            <div class="bg-surface-container-lowest rounded-xl ambient-shadow border border-surface-variant overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm">
+                        <thead class="bg-surface-container-low border-b border-surface-variant text-outline text-xs uppercase tracking-wider">
+                            <tr>
+                                <th class="px-6 py-4 font-medium">Status</th>
+                                <th class="px-6 py-4 font-medium">Type</th>
+                                <th class="px-6 py-4 font-medium">Score</th>
+                                <th class="px-6 py-4 font-medium">Location</th>
+                                <th class="px-6 py-4 font-medium">Distance</th>
+                                <th class="px-6 py-4 font-medium">Time</th>
+                                <th class="px-6 py-4 font-medium">Evidence</th>
+                                <th class="px-6 py-4 font-medium">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-surface-variant" id="incidents-tbody">
+                        </tbody>
+                    </table>
+                </div>
+                <div class="p-12 text-center text-outline flex flex-col items-center gap-2" id="incidents-empty">
+                    <span class="material-symbols-outlined text-4xl opacity-50">search_off</span>
+                    <p class="font-medium text-on-surface">No incidents found</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- VIEW: FACES -->
+        <section class="view flex-col gap-6 max-w-[1400px] mx-auto w-full p-lg" id="view-faces">
+            <div>
+                <h2 class="font-h1 text-h1 text-on-surface">Access Control</h2>
+                <p class="font-body-lg text-body-lg text-on-surface-variant mt-xs">Manage authorized identities.</p>
+            </div>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-gutter">
+                <!-- Registration -->
+                <div class="bg-surface-container-lowest rounded-xl ambient-shadow border border-surface-variant p-6">
+                    <div class="mb-6 border-b border-surface-variant pb-4">
+                        <h2 class="text-lg font-semibold text-on-surface">Register Authorized Person</h2>
+                        <p class="text-sm text-outline mt-1">Faces registered here will NOT trigger intruder alerts</p>
+                    </div>
+                    <div class="max-w-xl space-y-6">
+                        <div>
+                            <label class="block text-sm font-medium text-on-surface mb-2">Full Name</label>
+                            <input class="w-full px-4 py-2 rounded-lg border border-outline-variant focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-colors" id="face-name" placeholder="e.g. Aditya Prajapati" type="text"/>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-on-surface mb-2">Photo</label>
+                            <div class="flex gap-2 mb-4">
+                                <button class="flex-1 py-2 px-4 rounded-lg text-sm font-medium bg-primary-fixed/30 text-primary border border-primary/30 active" id="tab-upload" onclick="window._switchPhotoTab('upload')">📁 Upload Photo</button>
+                                <button class="flex-1 py-2 px-4 rounded-lg text-sm font-medium bg-surface-container hover:bg-surface-variant text-on-surface-variant transition-colors" id="tab-camera" onclick="window._switchPhotoTab('camera')">📷 Take Photo</button>
+                            </div>
+                            <div id="panel-upload">
+                                <div class="border-2 border-dashed border-outline-variant rounded-xl p-8 text-center hover:border-primary transition-colors cursor-pointer group" id="face-drop-zone" onclick="document.getElementById('face-file').click()">
+                                    <span class="material-symbols-outlined text-4xl text-outline group-hover:text-primary mb-2">cloud_upload</span>
+                                    <p class="text-sm text-on-surface font-medium mb-1">Drop a clear face photo here or <label class="text-primary hover:underline cursor-pointer">browse</label></p>
+                                    <p class="text-xs text-outline">JPG or PNG — one clear front-facing photo</p>
+                                    <input accept="image/jpeg,image/png" class="hidden" id="face-file" type="file"/>
+                                </div>
+                            </div>
+                            <div class="hidden" id="panel-camera">
+                                <div class="bg-black rounded-xl overflow-hidden relative">
+                                    <video autoplay="" class="w-full h-auto block aspect-video" id="face-video" muted="" playsinline=""></video>
+                                    <canvas class="hidden" id="face-canvas"></canvas>
+                                    <div class="absolute bottom-0 inset-x-0 p-4 bg-gradient-to-t from-black/80 flex justify-center gap-2">
+                                        <button class="px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium" id="start-cam-btn" onclick="window._startCamera()">▶ Start Camera</button>
+                                        <button class="px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium hidden" id="snap-btn" onclick="window._snapPhoto()">📸 Take Snapshot</button>
+                                        <button class="px-4 py-2 bg-white/20 text-white rounded-lg text-sm font-medium hidden hover:bg-white/30" id="retry-btn" onclick="window._retryCamera()">↺ Retake</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <img alt="Preview" class="w-32 h-32 object-cover rounded-lg border-2 border-primary hidden mt-4 shadow-md mx-auto" id="face-preview"/>
+                        </div>
+                        <div class="pt-4">
+                            <button class="w-full px-6 py-2.5 bg-primary text-white rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors shadow-sm" id="register-btn">Register Person</button>
+                            <div class="mt-3 text-sm font-medium p-3 rounded-lg hidden text-center" id="register-result"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Authorized Roster -->
+                <div class="bg-surface-container-lowest rounded-xl ambient-shadow border border-surface-variant p-6 flex flex-col h-[600px]">
+                    <div class="flex justify-between items-center mb-6 border-b border-surface-variant pb-4">
+                        <h2 class="text-lg font-semibold text-on-surface">Authorized Persons</h2>
+                        <button class="text-sm text-primary font-medium hover:underline flex items-center gap-1" id="refresh-faces-btn">
+                            <span class="material-symbols-outlined text-[16px]">refresh</span> Refresh
+                        </button>
+                    </div>
+                    <div class="grid grid-cols-2 lg:grid-cols-3 gap-4 overflow-y-auto pr-2 pb-4" id="faces-list">
+                        <div class="col-span-full py-8 text-center text-outline">
+                            <p class="font-medium text-on-surface">No registered faces</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- VIEW: MAP -->
+        <section class="view h-full w-full relative" id="view-map">
+            <!-- Full Map Container -->
+            <div class="w-[65%] h-full map-container-full relative">
+                <div class="absolute inset-0 z-0 flex items-center justify-center bg-surface-container-lowest/80 backdrop-blur-sm flex-col gap-2" id="map-placeholder">
+                    <span class="material-symbols-outlined text-[48px] text-outline">map</span>
+                    <p class="text-on-surface-variant font-body-md">Map appears when incidents have GPS data</p>
+                </div>
+                <iframe class="absolute inset-0 w-full h-full border-none z-0 mix-blend-multiply" id="map-iframe" style="display:none;" loading="lazy" allowfullscreen></iframe>
+            </div>
+            
+            <!-- Map Side Panel -->
+            <div class="w-[35%] h-full bg-surface-container-lowest border-l border-surface-container shadow-[-10px_0_20px_rgba(0,0,0,0.02)] z-30 flex flex-col">
+                <div class="p-container-padding border-b border-surface-container bg-surface flex justify-between items-center shrink-0">
+                    <div>
+                        <h2 class="font-h2 text-on-surface">Live Coordinates</h2>
+                        <p class="font-body-sm text-on-surface-variant">Pinned Incident Locations</p>
+                    </div>
+                </div>
+                <div class="flex-1 overflow-y-auto p-container-padding space-y-2" id="map-incidents-list">
+                    <div class="text-center py-8 text-outline text-sm"><p>No GPS data yet</p></div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modal-overlay">
+    <div class="modal">
+        <div class="modal-header">
+            <h2 class="font-semibold text-lg text-on-surface" id="modal-title">Incident Details</h2>
+            <button class="text-outline hover:text-on-surface transition-colors" id="modal-close">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+        <div class="modal-body space-y-3" id="modal-body"></div>
+        <div class="modal-footer" id="modal-footer"></div>
+    </div>
+</div>
+
+<div id="toast-container"></div>
+
+<script src="dashboard.js"></script>
+</body>
+</html>
